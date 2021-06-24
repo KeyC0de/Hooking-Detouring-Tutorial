@@ -22,7 +22,6 @@ void directJump( DWORD ip )
 
 extern "C" [[noreturn]] void hookSumAlternative();
 #pragma endregion
-
 void hook( bool bRestoreState );
 
 // this is our hookSum function
@@ -31,7 +30,7 @@ void hookSum()
 {
 	while ( true )
 	{
-		std::cout << "Instead of adding we print this!" << '\n';
+		std::cout << "Instead of adding we print this!\n";
 		if ( GetAsyncKeyState( VK_F10 ) & 1 )
 		{
 			std::cout << "Return Program.exe to previous state" << '\n';
@@ -41,8 +40,16 @@ void hookSum()
 	}
 }
 
-DWORD previousContents[5];
+// Allow executable access to this dll to the memory section where the call to sum(int,int) occurs in Program.exe.
+// You find this address through a reversing program say CheatEngine (or the VS debugger)
+// Then you plug the address here in the variable `address`.
+DWORD targetAddress = 0x009e109b;
+//DWORD baseAddress = 0x009d0000;
+//DWORD rva = targetAddress - baseAddress;	// RVA of sum	// 0x1109B
 DWORD address;
+BYTE previousContents[5];
+DWORD oldProtection;
+
 
 void hook( bool bRestoreState )
 {
@@ -52,29 +59,18 @@ void hook( bool bRestoreState )
 	// of Program.exe on demand
 	if ( bRestoreState )
 	{
-		*(volatile BYTE*)( address ) = previousContents[0];
-		*(volatile BYTE*)( address + 1 ) = previousContents[1];
-		*(volatile BYTE*)( address + 2 ) = previousContents[2];
-		*(volatile BYTE*)( address + 3 ) = previousContents[3];
-		*(volatile BYTE*)( address + 4 ) = previousContents[4];
-		directJump( address );	// return to Program.exe - just for fun
+		*(volatile BYTE*)( targetAddress ) = previousContents[0];
+		*(volatile BYTE*)( targetAddress + 1 ) = previousContents[1];
+		*(volatile BYTE*)( targetAddress + 2 ) = previousContents[2];
+		*(volatile BYTE*)( targetAddress + 3 ) = previousContents[3];
+		*(volatile BYTE*)( targetAddress + 4 ) = previousContents[4];
+
+		directJump( targetAddress );	// return to Program.exe - just for fun
 	}
-	ZeroMemory( previousContents,
-		sizeof( previousContents ) / sizeof( previousContents[0] ) );
-	//////////////////////////////////////////////////////////////////////
 #pragma endregion
 
-	// Allow executable access to this dll to the the memory section where the call to sum(int,int) occurs in Program.exe.
-	// You find this address through a reversing program say CheatEngine (or the VS debugger)
-	// Then you plug the address here in the variable `address`.
-	// In my case it was 0x012E63DC
-	//DWORD relativeAddress = 0x163DC;	// RVA
-	//DWORD baseAddress = 0x012d0000;
-	//DWORD address = baseAddress + relativeAddress;
-	// or:
-	address = 0x012E63DC;
+	DWORD address = targetAddress;
 	
-	DWORD oldProtection;
 	VirtualProtect( (void*)address,
 		5,
 		PAGE_EXECUTE_READWRITE,
@@ -94,10 +90,11 @@ void hook( bool bRestoreState )
 	// jmp @hookSum
 
 	// restore page to its former status
-	VirtualProtect( (void*)address,
+	VirtualProtect( (void*)targetAddress,
 		5,
 		oldProtection,
 		nullptr );
+
 	return;
 }
 
@@ -114,7 +111,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 		break;
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
-		// to load/unload dlls it has to be done from the main program or through a 3d
+		// to load/unload dlls it has to be done from the main program or through a 3rd
 		// program - it can't be done from within the dll itself!
 		break;
 	}
