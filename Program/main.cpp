@@ -33,8 +33,15 @@ int sum( int x,
 int main()
 {
 	getProcessEnvironmentBlock();
-	std::cout << "address of sum @" << &sum << '\n';
-	std::cout << "exe base address @" << GetModuleHandle( nullptr ) << '\n';
+	std::cout << "address of main @"
+		<< &main
+		<< '\n';
+	std::cout << "address of sum @"
+		<< &sum
+		<< '\n';
+	std::cout << "exe base address @"
+		<< GetModuleHandle( nullptr )
+		<< '\n';
 	// alternative way to get the process's handle in case it is hooked (useful in game hacking etc):
 	const auto peb = reinterpret_cast<PPEB>( __readfsdword(0x30) );
 	const auto pBase = peb->Reserved3[1];
