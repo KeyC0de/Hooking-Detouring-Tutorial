@@ -8,14 +8,14 @@
 #include <winternl.h>
 PPEB pPeb;
 
-void getProcessEnvironmentBlock()
+void setupPeb()
 {
 	// Thread Environment Block (TEB)
 	PTEB pTeb;
-#if defined(_M_X64) // x64
-	pTeb = reinterpret_cast<PTEB>(__readgsqword(reinterpret_cast<DWORD_PTR>(&static_cast<NT_TIB*>(nullptr)->Self)));
-#else // x86
-	pTeb = reinterpret_cast<PTEB>(__readfsdword(reinterpret_cast<DWORD_PTR>(&static_cast<NT_TIB*>(nullptr)->Self)));
+#if defined _WIN64 || defined _M_X64
+	pTeb = reinterpret_cast<PTEB>( __readgsqword( reinterpret_cast<DWORD_PTR>( &static_cast<NT_TIB*>( nullptr )->Self ) ) );
+#else
+	pTeb = reinterpret_cast<PTEB>( __readfsdword( reinterpret_cast<DWORD_PTR>( &static_cast<NT_TIB*>( nullptr )->Self ) ) );
 #endif
 
 	// Process Environment Block (PEB)
@@ -32,7 +32,7 @@ int sum( int x,
 
 int main()
 {
-	getProcessEnvironmentBlock();
+	setupPeb();
 	std::cout << "address of main @"
 		<< &main
 		<< '\n';
@@ -42,7 +42,7 @@ int main()
 	std::cout << "exe base address @"
 		<< GetModuleHandle( nullptr )
 		<< '\n';
-	// alternative way to get the process's handle in case it is hooked (useful in game hacking etc):
+	// alternative way to get the process's handle in case it is hooked
 	const auto peb = reinterpret_cast<PPEB>( __readfsdword(0x30) );
 	const auto pBase = peb->Reserved3[1];
 	std::cout << "alternative exe base address @"

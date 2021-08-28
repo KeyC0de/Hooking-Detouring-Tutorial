@@ -33,16 +33,16 @@ void hookSum()
 		std::cout << "Instead of adding we print this!\n";
 		if ( GetAsyncKeyState( VK_F10 ) & 1 )
 		{
-			std::cout << "Return Program.exe to previous state" << '\n';
+			std::cout << "Return Program.exe to previous state\n";
 			hook( true );
 		}
 		Sleep( 3000 );
 	}
 }
 
-DWORD returnAddress = 0x00811316;	// jump back to Program@main
+DWORD returnAddress = 0x00A51316;	// jump back to Program@main
 
-DWORD targetAddress = 0x0081109b;
+DWORD targetAddress = 0x00A5109b;	// Program@sum
 // Allow executable access to this dll to the memory section where the call to sum(int,int) occurs in Program.exe.
 // You find this address through a reversing program say CheatEngine (or the VS debugger)
 // Then you plug the address here in the variable `address`.
