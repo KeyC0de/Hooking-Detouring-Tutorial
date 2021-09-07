@@ -10,6 +10,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Program", "Program\Program.
 		{BE6B191B-D16F-41BC-841F-4BD8E75FBA05} = {BE6B191B-D16F-41BC-841F-4BD8E75FBA05}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{194977AA-DA50-4477-8727-76290827FCDC}"
+	ProjectSection(SolutionItems) = preProject
+		winner.h = winner.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

@@ -1,6 +1,5 @@
 #include <iostream>
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "../winner.h"
 
 
 //////////////////////////////////////////////////////////////////////
@@ -8,7 +7,7 @@
 #include <winternl.h>
 PPEB pPeb;
 
-void setupPeb()
+void fetchPeb()
 {
 	// Thread Environment Block (TEB)
 	PTEB pTeb;
@@ -32,7 +31,7 @@ int sum( int x,
 
 int main()
 {
-	setupPeb();
+	fetchPeb();
 	std::cout << "address of main @"
 		<< &main
 		<< '\n';
