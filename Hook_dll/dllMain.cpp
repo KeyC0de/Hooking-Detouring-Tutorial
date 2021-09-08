@@ -38,12 +38,10 @@ void hookSum()
 
 DWORD returnAddress = 0x00A51316;	// jump back to Program@main
 
-DWORD targetAddress = 0x00A5109b;	// Program@sum
+DWORD targetAddress = 0x00A5109b;
 // Allow executable access to this dll to the memory section where the call to sum(int,int) occurs in Program.exe.
 // You find this address through a reversing program say CheatEngine (or the VS debugger)
-// Then you plug the address here in the variable `address`.
-//DWORD baseAddress = 0x00800000;
-//DWORD rva = targetAddress - baseAddress;	// RVA of sum	// 0x1109B
+// Then you plug the address here in the variable `targetAddress`.
 BYTE previousContents[5];
 DWORD oldProtection;
 
