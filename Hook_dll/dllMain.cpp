@@ -20,9 +20,9 @@ extern "C" [[noreturn]] void hookSumAlternative();
 #pragma endregion
 void hook( bool bRestoreState );
 
-// this is our hookSum function
+// this is our hookedSum function
 [[noreturn]]
-void hookSum() 
+void hookedSum() 
 {
 	while ( true )
 	{
@@ -36,12 +36,12 @@ void hookSum()
 	}
 }
 
-DWORD returnAddress = 0x00A51316;	// jump back to Program@main
-
-DWORD targetAddress = 0x00A5109b;
+DWORD returnAddress = 0x009f1010;	// jump back to Program@main
 // Allow executable access to this dll to the memory section where the call to sum(int,int) occurs in Program.exe.
-// You find this address through a reversing program say CheatEngine (or the VS debugger)
-// Then you plug the address here in the variable `targetAddress`.
+// You find this address through a debugger say CheatEngine (or the VS debugger)
+// Then you assign the address here in the variable `targetAddress`.
+// [note that it should be a Relative Virtual Address (RVA)]
+DWORD targetAddress = 0x009F10E5;
 BYTE previousContents[5];
 DWORD oldProtection;
 
@@ -81,8 +81,8 @@ void hook( bool bRestoreState )
 #pragma endregion
 
 	*(volatile BYTE*)(address) = 0xE9;	// write the JMP opcode
-	*(volatile DWORD*)(address + 1) = (DWORD)&hookSum - ( address + 5 );	// write the address to jump to 
-	// jmp @hookSum
+	*(volatile DWORD*)(address + 1) = (DWORD)&hookedSum - ( address + 5 );	// write the RVA to jump to
+	// jmp @hookedSum
 
 	// restore page to its former status
 	VirtualProtect( (void*)targetAddress,
@@ -115,7 +115,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
 
 #pragma region optionalExtraneous4
-// an alternative hookSum
+// an alternative hookedSum
 static char title[] = "KeyC0de Hook";
 static char body[] = "My Body";
 
