@@ -16,7 +16,7 @@ void directJump( DWORD ip )
 #endif
 }
 
-extern "C" [[noreturn]] void hookSumAlternative();
+extern "C" [[noreturn]] void hookedSumAlternative();
 #pragma endregion
 void hook( bool bRestoreState );
 
@@ -122,7 +122,7 @@ static char body[] = "My Body";
 extern "C"
 [[noreturn]]
 __declspec(naked)
-void hookSumAlternative()
+void hookedSumAlternative()
 {
 	// during optimisation, VS moved a pointer to MessageBoxA into esi
 	__asm {
