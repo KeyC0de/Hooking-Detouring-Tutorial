@@ -36,12 +36,12 @@ void hookedSum()
 	}
 }
 
-DWORD returnAddress = 0x009f1010;	// jump back to Program@main
+DWORD returnAddress = 0x00951010;	// jump back to Program@main
 // Allow executable access to this dll to the memory section where the call to sum(int,int) occurs in Program.exe.
 // You find this address through a debugger say CheatEngine (or the VS debugger)
 // Then you assign the address here in the variable `targetAddress`.
 // [note that it should be a Relative Virtual Address (RVA)]
-DWORD targetAddress = 0x009F10E5;
+DWORD targetAddress = 0x009510E5;
 BYTE previousContents[5];
 DWORD oldProtection;
 

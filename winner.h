@@ -65,7 +65,7 @@ static_assert( _MSC_VER >= 1900,
 //#	define NOMB						// MB_* and MessageBox()
 //#	define NOSOUND					// Sound driver routines
 //#	define NOTEXTMETRIC				// typedef TEXTMETRIC and associated routines
-									// required by atlbase.h
+									// 	required by atlbase.h
 //#	define NOWINOFFSETS				// GWL_*, GCL_*, associated routines
 //#	define ANSI_ONLY				// no unicode support
 
@@ -82,11 +82,12 @@ static_assert( _MSC_VER >= 1900,
 #endif // !STRICT
 
 #if defined NDEBUG || !defined _DEBUG 
-//#define _ITERATOR_DEBUG_LEVEL	0	// disables checked iterators, equivalent to #define _SECURE_SCL 0
+#	define _ITERATOR_DEBUG_LEVEL		0	// disables checked iterators - no checking on container bounds for overwrites 
+											// equivalent to #define _SECURE_SCL 0
 #endif // NDEBUG
-#define _CRT_SECURE_NO_DEPRECATE	// non-secure c/winapi functions are not deprecated
-#define _CRT_SECURE_NO_WARNINGS 1
-#define _SCL_SECURE_NO_WARNINGS		// don't emit warnings for non-secure winapi functions
+
+#define _CRT_SECURE_NO_DEPRECATE		1	// non-secure c/winapi functions are not deprecated
+#define _CRT_SECURE_NO_WARNINGS			1	// don't emit warnings for non-secure winapi functions
 #define _WINSOCK_DEPRECATED_NO_WARNINGS 1
 
 #ifdef _ALLOW_KEYWORD_MACROS
@@ -96,21 +97,7 @@ static_assert( _MSC_VER >= 1900,
 
 #include <Windows.h>
 
-#define IDD_MFPLAYBACK_DIALOG		102
-#define IDD_ABOUTBOX				103
-#define IDM_ABOUT					104
-#define IDM_EXIT					105
-#define IDI_SMALL					108
-#define IDC_MFPLAYBACK				109
-#define IDD_OPENURL					129
-#define IDC_EDIT_URL				1000
-#define ID_FILE_OPENFILE			32771
-#define ID_FILE_OPENURL				32772
-#define IDR_MAINFRAME				128
-#define IDC_MYICON					2
-#define IDC_STATIC					-1
 
-
-// provides relocatable base address at RVA = 0
+// provides relocatable process base address at RVA = 0
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 #define THIS_INSTANCE ( (HINSTANCE)&__ImageBase )
