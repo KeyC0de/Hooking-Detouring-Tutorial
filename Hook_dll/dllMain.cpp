@@ -2,57 +2,40 @@
 #include "../winner.h"
 
 
+#if defined _WIN64 || defined __x86_64__ || defined __ppc64__
+using TWORD = UINT64;
+#elif defined _WIN32
+using TWORD = DWORD;
+#endif
+
 #pragma region optionalExtraneous1
 [[noreturn]]
-void directJump( DWORD ip )
+void directJump( TWORD ip )
 {
-#if defined _WIN32 || defined _MSC_VER
 	__asm {
 		jmp ip
 	};
-#elif defined __linux__
-	void *ptr = (void *)ip;
-	goto *ptr;
-#endif
 }
-
-extern "C" [[noreturn]] void hookedSumAlternative();
 #pragma endregion
-void hook( bool bRestoreState );
 
-// this is our hookedSum function
-[[noreturn]]
-void hookedSum() 
-{
-	while ( true )
-	{
-		std::cout << "Instead of adding we print this!\n";
-		if ( GetAsyncKeyState( VK_F10 ) & 1 )
-		{
-			std::cout << "Return Program.exe to previous state\n";
-			hook( true );
-		}
-		Sleep( 3000 );
-	}
-}
+void hookedSum();
 
-DWORD returnAddress = 0x00951010;	// jump back to Program@main
+//TWORD returnAddress = 0x001B1010;	// jump back to Program@main
 // Allow executable access to this dll to the memory section where the call to sum(int,int) occurs in Program.exe.
 // You find this address through a debugger say CheatEngine (or the VS debugger)
 // Then you assign the address here in the variable `targetAddress`.
 // [note that it should be a Relative Virtual Address (RVA)]
-DWORD targetAddress = 0x009510E5;
-BYTE previousContents[5];
-DWORD oldProtection;
+// TWORD targetAddress = 0x001B10E5;
 
-
-void hook( bool bRestoreState )
+void hook( TWORD targetAddress = 0,
+	TWORD returnAddress = 0 )
 {
-
 #pragma region optionalExtraneous2
+	static BYTE previousContents[5];
+	TWORD oldProtection;
 	// this is optional - I just did it to restore the memory contents
 	// of Program.exe on demand
-	if ( bRestoreState )
+	if ( targetAddress == 0 && returnAddress != 0 )
 	{
 		*(volatile BYTE*)( targetAddress ) = previousContents[0];
 		*(volatile BYTE*)( targetAddress + 1 ) = previousContents[1];
@@ -64,24 +47,22 @@ void hook( bool bRestoreState )
 	}
 #pragma endregion
 
-	DWORD address = targetAddress;
-	
-	VirtualProtect( (void*)address,
+	VirtualProtect( (void*)targetAddress,
 		5,
 		PAGE_EXECUTE_READWRITE,
 		&oldProtection );
 
 #pragma region optionalExtraneous3
 	// safekeep previous memory contents
-	previousContents[0] = *(volatile BYTE*)( address );
-	previousContents[1] = *(volatile BYTE*)( address + 1 );
-	previousContents[2] = *(volatile BYTE*)( address + 2 );
-	previousContents[3] = *(volatile BYTE*)( address + 3 );
-	previousContents[4] = *(volatile BYTE*)( address + 4 );
+	previousContents[0] = *(volatile BYTE*)( targetAddress );
+	previousContents[1] = *(volatile BYTE*)( targetAddress + 1 );
+	previousContents[2] = *(volatile BYTE*)( targetAddress + 2 );
+	previousContents[3] = *(volatile BYTE*)( targetAddress + 3 );
+	previousContents[4] = *(volatile BYTE*)( targetAddress + 4 );
 #pragma endregion
 
-	*(volatile BYTE*)(address) = 0xE9;	// write the JMP opcode
-	*(volatile DWORD*)(address + 1) = (DWORD)&hookedSum - ( address + 5 );	// write the RVA to jump to
+	*(volatile BYTE*)(targetAddress) = 0xE9;	// write the JMP opcode
+	*(volatile TWORD*)(targetAddress + 1) = (TWORD)&hookedSum - ( targetAddress + 5 );	// write the RVA to jump to
 	// jmp @hookedSum
 
 	// restore page to its former status
@@ -89,25 +70,52 @@ void hook( bool bRestoreState )
 		5,
 		oldProtection,
 		nullptr );
+}
 
-	return;
+[[noreturn]]
+void hookedSum()
+{
+	while ( true )
+	{
+		std::cout << "Instead of adding we print this!\n";
+		if ( GetAsyncKeyState( VK_F10 ) & 1 )
+		{
+			std::cout << "Return Program.exe to previous state\n";
+			hook( 0x001B10E5,
+				0x001B1010 );
+		}
+		Sleep( 3000 );
+	}
 }
 
 
-BOOL APIENTRY DllMain( HANDLE hModule,
-	DWORD args,
-	LPVOID lpReserved )
+int WINAPI DllMain( HINSTANCE hDll,
+	DWORD ulReasonForcall,
+	LPVOID pReserved )
 {
-	switch ( args )
+	switch ( ulReasonForcall )
 	{
-	case DLL_THREAD_ATTACH:
 	case DLL_PROCESS_ATTACH:
-		hook( false );
+	{
+		hook( 0x001B10E5 );
 		break;
-	case DLL_THREAD_DETACH:
+	}
+	case DLL_THREAD_ATTACH:
+		break;
 	case DLL_PROCESS_DETACH:
-		// to load/unload dlls it has to be done from the main program or through a 3rd
-		// program - it can't be done from within the dll itself!
+	case DLL_THREAD_DETACH:
+	{
+		// dll cleanup must be done from code that loaded the dll,
+		//	as if by FreeLibraryAndExitThread( hDll, 0u );
+		// If the dll itself called LoadLibrary then it can unload itself like so:
+		// GetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+		// 	(LPCTSTR)DllMain,
+		// 	&hDll );
+		// FreeLibraryAndExitThread( hDll,
+		// 	0u );
+	}
+	default:
+		// Do any cleanup..
 		break;
 	}
 	return TRUE;
@@ -115,7 +123,10 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
 
 #pragma region optionalExtraneous4
-// an alternative hookedSum
+// an alternative hookedSum function
+#if defined _WIN64 || defined __x86_64__ || defined __ppc64__
+//
+#elif defined _WIN32
 static char title[] = "KeyC0de Hook";
 static char body[] = "My Body";
 
@@ -133,8 +144,9 @@ void hookedSumAlternative()
 		push 0
 		call esi
 		popad
-		mov eax, 010B1406h
+		mov eax, 001B1406h
 		call eax
 	}
 }
+#endif
 #pragma endregion
